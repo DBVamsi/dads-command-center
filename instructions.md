@@ -1,4 +1,3 @@
-
 # Dad's Command Center - Setup and Deployment Guide
 
 This guide provides instructions for setting up the "Dad's Command Center" project for local development and deploying it to GitHub Pages using GitHub Actions. The project is a React application built with Vite, using Firebase for backend services.

@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    base: env.VITE_GITHUB_PAGES_BASE_PATH || '/', // Set base path for GitHub Pages
+    base: env.VITE_GITHUB_PAGES_BASE_PATH || '/dads-command-center/', // Set base path for GitHub Pages
                                                  // Falls back to '/' for local dev or if not set.
                                                  // Example for GitHub Pages: '/your-repo-name/'
     define: {
