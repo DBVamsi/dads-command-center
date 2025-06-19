@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppUser, TaskCategory } from '../../types';
+import { AppUser, TaskCategory, TaskFilter } from '../../types';
 import { signOutUser } from '../../services/firebaseService';
 import { CategoryTabs } from './CategoryTabs';
 import { TaskForm } from './TaskForm';
@@ -55,6 +55,7 @@ Header.displayName = 'Header';
 
 export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory>(TASK_CATEGORIES[0]);
+  const [filter, setFilter] = useState<TaskFilter>('all');
   const [showSignOutError, setShowSignOutError] = useState<string | null>(null);
 
   const handleSignOut = async () => {
@@ -78,8 +79,20 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
       <main className="container mx-auto px-4 py-8 flex-grow">
         {showSignOutError && <p className="text-center text-danger mb-4 bg-danger/10 p-3 rounded-lg border border-danger">{showSignOutError}</p>}
         <CategoryTabs selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
+        <div className="mb-6 flex flex-wrap justify-center sm:justify-start -m-1">
+          {(['all', 'active', 'completed'] as TaskFilter[]).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 m-1 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background
+                ${filter === f ? 'bg-primary text-white shadow-lg scale-105' : 'bg-surface text-textSecondary hover:bg-surface-lighter hover:text-textPrimary shadow-sm hover:shadow-md'}`}
+            >
+              {f.charAt(0).toUpperCase() + f.slice(1)}
+            </button>
+          ))}
+        </div>
         <TaskForm selectedCategory={selectedCategory} user={user} />
-        <TaskList selectedCategory={selectedCategory} user={user} />
+        <TaskList selectedCategory={selectedCategory} filter={filter} user={user} />
       </main>
 
       <footer className="text-center py-8 text-xs text-gray-500 dark:text-textMuted border-t border-gray-200 dark:border-borderDark/30">

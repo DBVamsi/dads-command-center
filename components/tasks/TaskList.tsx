@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTasksStream, updateTaskOrder } from '../../services/firebaseService';
-import { Task, TaskCategory, AppUser } from '../../types';
+import { Task, TaskCategory, AppUser, TaskFilter } from '../../types';
 import { TaskItem } from './TaskItem';
 import { Spinner } from '../ui/Spinner';
 import { Inbox } from 'lucide-react';
@@ -23,10 +23,11 @@ import {
 
 interface TaskListProps {
   selectedCategory: TaskCategory;
+  filter: TaskFilter;
   user: AppUser;
 }
 
-export const TaskList: React.FC<TaskListProps> = ({ selectedCategory, user }) => {
+export const TaskList: React.FC<TaskListProps> = ({ selectedCategory, filter, user }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +52,7 @@ export const TaskList: React.FC<TaskListProps> = ({ selectedCategory, user }) =>
     const unsubscribe = getTasksStream(
       user.uid,
       selectedCategory,
+      filter,
       (fetchedTasks) => {
         setTasks(fetchedTasks);
         setIsLoading(false);
@@ -63,7 +65,7 @@ export const TaskList: React.FC<TaskListProps> = ({ selectedCategory, user }) =>
         unsubscribe();
       }
     };
-  }, [selectedCategory, user]);
+  }, [selectedCategory, filter, user]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

@@ -105,6 +105,7 @@ export const addTask = async (
 export const getTasksStream = (
   userId: string,
   category: TaskCategory,
+  filter: 'all' | 'active' | 'completed',
   callback: (tasks: Task[]) => void
 ): Unsubscribe => {
   if (!db) {
@@ -116,6 +117,8 @@ export const getTasksStream = (
     collection(db, 'tasks'),
     where('userId', '==', userId),
     where('category', '==', category),
+    ...(filter === 'active' ? [where('completed', '==', false)] : []),
+    ...(filter === 'completed' ? [where('completed', '==', true)] : []),
     orderBy('position', 'asc') // Order by the new position field
   );
 
