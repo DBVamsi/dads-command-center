@@ -1,0 +1,6 @@
+{
+  "name": "Dad's Command Center",
+  "description": "A task management application for dads to organize their day, with categories for Wife, Daughter, Work, and Chores. Users can sign in with Google, add, view, complete, and delete tasks within selected categories.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dad's Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#6D28D9', // Vibrant Violet-700 (changed from Indigo for more pop)
+              'primary-hover': '#5B21B6', // Violet-800
+              secondary: '#EC4899', // Pink-500
+              background: '#111827', // Gray-900
+              surface: '#1F2937', // Gray-800
+              'surface-lighter': '#374151', // Gray-700 for hover states or subtle backgrounds
+              textPrimary: '#F9FAFB', // Gray-50
+              textSecondary: '#D1D5DB', // Gray-300 (lightened for better contrast on dark)
+              textMuted: '#9CA3AF', // Gray-400 (original textSecondary)
+              danger: '#E11D48', // Rose-600 (more vibrant red)
+              'danger-hover': '#BE123C', // Rose-700
+              borderLight: '#374151', // Gray-700
+              borderDark: '#4B5563', // Gray-600
+              gray_950: '#030712', // For very dark elements like header background
+            }
+          }
+        }
+      }
+    </script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "firebase/": "https://esm.sh/firebase@^11.9.1/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.516.0",
+    "vite": "https://esm.sh/vite@^6.3.5",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^4.5.2"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-gradient-to-br from-background to-gray_950 text-textPrimary antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script> 
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
