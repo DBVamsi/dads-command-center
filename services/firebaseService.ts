@@ -1,4 +1,3 @@
-
 import { initializeApp, FirebaseApp } from 'firebase/app';
 import {
   getAuth,
@@ -25,15 +24,13 @@ import {
   Unsubscribe
 } from 'firebase/firestore';
 import { FIREBASE_CONFIG } from '../constants';
-import { Task, TaskCategory } from '../types';
+import { Task, TaskCategory, Priority } from '../types';
 
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 
 try {
-  // Check if essential config values are present before initializing
-  // This helps in providing a clearer error message if process.env variables were not loaded.
   if (!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.projectId) {
     throw new Error("Firebase API key or Project ID is missing. Check environment configuration.");
   }
@@ -42,17 +39,15 @@ try {
   db = getFirestore(app);
 } catch (error) {
   console.error("Error initializing Firebase:", error);
-  // Potentially display a more user-friendly error or disable Firebase features
   if (!FIREBASE_CONFIG.apiKey) {
-    console.error("Firebase API key is missing. Please ensure your environment variables (e.g., VITE_FIREBASE_API_KEY accessed via process.env) are correctly set and accessible.");
+    console.error("Firebase API key is missing. Please ensure your environment variables are correctly set.");
   }
 }
-
 
 const googleProvider = new GoogleAuthProvider();
 
 export const signInWithGoogle = async (): Promise<User | null> => {
-  if (!auth) throw new Error("Firebase Auth not initialized. Check Firebase configuration and initialization logs.");
+  if (!auth) throw new Error("Firebase Auth not initialized.");
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
@@ -74,11 +69,9 @@ export const signOutUser = async (): Promise<void> => {
 
 export const onAuthUserChanged = (callback: (user: User | null) => void): Unsubscribe => {
   if (!auth) {
-    console.warn("Firebase Auth not initialized when trying to set up onAuthUserChanged listener. User will be reported as null.");
-    // Call callback with null immediately if auth is not available
-    // and return a no-op unsubscribe function.
+    console.warn("Firebase Auth not initialized. User will be reported as null.");
     callback(null);
-    return () => {}; 
+    return () => {};
   }
   return onAuthStateChanged(auth, callback);
 };
@@ -86,9 +79,10 @@ export const onAuthUserChanged = (callback: (user: User | null) => void): Unsubs
 export const addTask = async (
   userId: string,
   text: string,
-  category: TaskCategory
+  category: TaskCategory,
+  details: { priority?: Priority; dueDate?: string }
 ): Promise<string> => {
-  if (!db) throw new Error("Firestore not initialized. Check Firebase configuration and initialization logs.");
+  if (!db) throw new Error("Firestore not initialized.");
   try {
     const docRef = await addDoc(collection(db, 'tasks'), {
       userId,
@@ -96,6 +90,8 @@ export const addTask = async (
       category,
       completed: false,
       createdAt: Timestamp.now(),
+      priority: details.priority || 'Medium',
+      dueDate: details.dueDate ? Timestamp.fromDate(new Date(details.dueDate)) : null,
     });
     return docRef.id;
   } catch (error) {
@@ -110,14 +106,16 @@ export const getTasksStream = (
   callback: (tasks: Task[]) => void
 ): Unsubscribe => {
   if (!db) {
-    console.warn("Firestore not initialized when trying to set up getTasksStream listener. Task list will be empty.");
-    callback([]); // Return empty list if db not available
+    console.warn("Firestore not initialized. Task list will be empty.");
+    callback([]);
     return () => {};
   }
   const q = query(
     collection(db, 'tasks'),
     where('userId', '==', userId),
     where('category', '==', category),
+    orderBy('completed'),
+    orderBy('dueDate', 'asc'),
     orderBy('createdAt', 'desc')
   );
 
@@ -128,24 +126,24 @@ export const getTasksStream = (
     callback(tasks);
   }, (error) => {
     console.error("Error fetching tasks in real-time:", error);
-    // Potentially handle error state in UI
-     callback([]); //  Return empty list on error too
+    callback([]);
   });
 };
 
-export const updateTaskCompletion = async (
+export const updateTask = async (
   taskId: string,
-  completed: boolean
+  updates: Partial<Task>
 ): Promise<void> => {
   if (!db) throw new Error("Firestore not initialized.");
   const taskRef = doc(db, 'tasks', taskId);
   try {
-    await updateDoc(taskRef, { completed });
+    await updateDoc(taskRef, updates);
   } catch (error) {
-    console.error("Error updating task completion:", error);
+    console.error("Error updating task:", error);
     throw error;
   }
 };
+
 
 export const deleteTask = async (taskId: string): Promise<void> => {
   if (!db) throw new Error("Firestore not initialized.");

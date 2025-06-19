@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,34 +7,41 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class', // Enable class-based dark mode
         theme: {
           extend: {
             colors: {
-              primary: '#6D28D9', // Vibrant Violet-700 (changed from Indigo for more pop)
+              primary: '#6D28D9', // Vibrant Violet-700
               'primary-hover': '#5B21B6', // Violet-800
               secondary: '#EC4899', // Pink-500
+              
+              // Dark theme colors
               background: '#111827', // Gray-900
               surface: '#1F2937', // Gray-800
-              'surface-lighter': '#374151', // Gray-700 for hover states or subtle backgrounds
               textPrimary: '#F9FAFB', // Gray-50
-              textSecondary: '#D1D5DB', // Gray-300 (lightened for better contrast on dark)
-              textMuted: '#9CA3AF', // Gray-400 (original textSecondary)
-              danger: '#E11D48', // Rose-600 (more vibrant red)
-              'danger-hover': '#BE123C', // Rose-700
-              borderLight: '#374151', // Gray-700
+              textSecondary: '#D1D5DB', // Gray-300
+              textMuted: '#9CA3AF', // Gray-400
               borderDark: '#4B5563', // Gray-600
-              gray_950: '#030712', // For very dark elements like header background
+              gray_950: '#030712',
+
+              // Light theme colors (you can customize these)
+              backgroundLight: '#F3F4F6', // Gray-100
+              surfaceLight: '#FFFFFF', // White
+              textPrimaryLight: '#1F2937', // Gray-800
+              textSecondaryLight: '#4B5563', // Gray-600
+              textMutedLight: '#6B7280', // Gray-500
+              borderLight: '#E5E7EB', // Gray-200
+
+              danger: '#E11D48', // Rose-600
+              'danger-hover': '#BE123C', // Rose-700
             }
           }
         }
       }
     </script>
-
-<link rel="stylesheet" href="/index.css">
 </head>
-<body class="bg-gradient-to-br from-background to-gray_950 text-textPrimary antialiased">
+<body class="bg-backgroundLight dark:bg-gradient-to-br dark:from-background dark:to-gray_950 text-textPrimaryLight dark:text-textPrimary antialiased">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script> 
-
 </body>
 </html>

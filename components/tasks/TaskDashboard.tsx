@@ -1,37 +1,57 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppUser, TaskCategory } from '../../types';
 import { signOutUser } from '../../services/firebaseService';
 import { CategoryTabs } from './CategoryTabs';
 import { TaskForm } from './TaskForm';
 import { TaskList } from './TaskList';
 import { Button } from '../ui/Button';
-import { LogOut, LayoutDashboard } from 'lucide-react'; // Changed icon to LayoutDashboard
+import { LogOut, LayoutDashboard, Moon, Sun } from 'lucide-react';
 import { TASK_CATEGORIES } from '../../constants';
+import useLocalStorageState from 'use-local-storage-state';
 
 interface TaskDashboardProps {
   user: AppUser;
 }
 
-const Header: React.FC<{ onSignOut: () => void; userName?: string | null }> = React.memo(({ onSignOut, userName }) => (
-  <header className="bg-gray_950 shadow-xl p-4 sticky top-0 z-50 border-b border-borderDark/50">
-    <div className="container mx-auto flex justify-between items-center">
-      <div className="flex items-center">
-        <LayoutDashboard size={32} className="text-primary mr-3" />
-        <h1 className="text-3xl sm:text-4xl font-bold text-textPrimary tracking-tight">
-          Dad's Command Center
-        </h1>
-      </div>
-      <div className="flex items-center space-x-4">
-        {userName && <span className="text-textSecondary text-sm sm:text-base hidden sm:block">Hi, {userName.split(' ')[0]}!</span>}
-        <Button onClick={onSignOut} variant="outline" size="md" leftIcon={<LogOut size={18} />}>
-          Sign Out
-        </Button>
-      </div>
-    </div>
-  </header>
-));
-Header.displayName = 'Header'; // For React DevTools
+const Header: React.FC<{ onSignOut: () => void; userName?: string | null }> = React.memo(({ onSignOut, userName }) => {
+    const [theme, setTheme] = useLocalStorageState('theme', { defaultValue: 'dark' });
 
+    useEffect(() => {
+        const element = document.documentElement;
+        if (theme === 'light') {
+            element.classList.remove('dark');
+        } else {
+            element.classList.add('dark');
+        }
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(theme === 'light' ? 'dark' : 'light');
+    };
+  
+    return (
+      <header className="bg-gray-100 dark:bg-gray_950 shadow-xl p-4 sticky top-0 z-50 border-b border-gray-200 dark:border-borderDark/50">
+        <div className="container mx-auto flex justify-between items-center">
+          <div className="flex items-center">
+            <LayoutDashboard size={32} className="text-primary mr-3" />
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-textPrimary tracking-tight">
+              Dad's Command Center
+            </h1>
+          </div>
+          <div className="flex items-center space-x-4">
+            {userName && <span className="text-gray-600 dark:text-textSecondary text-sm sm:text-base hidden sm:block">Hi, {userName.split(' ')[0]}!</span>}
+            <Button onClick={toggleTheme} variant="outline" size="sm" className="p-2">
+                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </Button>
+            <Button onClick={onSignOut} variant="outline" size="md" leftIcon={<LogOut size={18} />}>
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </header>
+    );
+});
+Header.displayName = 'Header';
 
 export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory>(TASK_CATEGORIES[0]);
@@ -52,7 +72,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
   }
   
   return (
-    <div className="min-h-screen flex flex-col bg-transparent text-textPrimary">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-transparent text-gray-800 dark:text-textPrimary">
       <Header onSignOut={handleSignOut} userName={user.displayName || user.email} />
       
       <main className="container mx-auto px-4 py-8 flex-grow">
@@ -62,7 +82,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
         <TaskList selectedCategory={selectedCategory} user={user} />
       </main>
 
-      <footer className="text-center py-8 text-xs text-textMuted border-t border-borderDark/30">
+      <footer className="text-center py-8 text-xs text-gray-500 dark:text-textMuted border-t border-gray-200 dark:border-borderDark/30">
         &copy; {new Date().getFullYear()} Dad's Command Center. Master your tasks, champion your day.
       </footer>
     </div>

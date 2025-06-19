@@ -9,6 +9,8 @@ export enum TaskCategory {
   CHORES = 'Chores',
 }
 
+export type Priority = 'High' | 'Medium' | 'Low';
+
 export interface Task {
   id: string;
   text: string;
@@ -16,6 +18,8 @@ export interface Task {
   completed: boolean;
   createdAt: Timestamp;
   userId: string;
+  priority?: Priority;
+  dueDate?: Timestamp | null;
 }
 
 export type AppUser = FirebaseUser | null;
