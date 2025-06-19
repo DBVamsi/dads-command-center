@@ -16,10 +16,15 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
   const [priority, setPriority] = useState<Priority>('Medium');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const canAdd = selectedCategory !== TaskCategory.ALL;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskText.trim() || !user) return;
+    if (!canAdd) {
+      setError('Select a specific category tab to add tasks.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -48,12 +53,12 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
           onChange={(e) => setTaskText(e.target.value)}
           placeholder={`Add a new task for ${selectedCategory}...`}
           className="flex-grow w-full bg-transparent p-3 text-textPrimary dark:text-textPrimary placeholder-textMuted dark:placeholder-textMuted focus:outline-none focus:ring-2 focus:ring-primary rounded-lg border border-borderLight dark:border-borderDark"
-          disabled={isLoading}
+          disabled={isLoading || !canAdd}
           aria-label={`New task for ${selectedCategory}`}
         />
         <Button
           type="submit"
-          disabled={isLoading || !taskText.trim()}
+          disabled={isLoading || !taskText.trim() || !canAdd}
           variant="primary"
           size="md"
           className="w-full sm:w-auto px-5 py-3"
@@ -87,6 +92,11 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
             </select>
         </div>
       </div>
+      {!canAdd && (
+        <p className="mt-3 text-sm text-textSecondary">
+          Select a category tab to add new tasks.
+        </p>
+      )}
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
     </form>
   );
