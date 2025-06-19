@@ -23,3 +23,5 @@ export interface Task {
 }
 
 export type AppUser = FirebaseUser | null;
+
+export type TaskFilter = 'all' | 'active' | 'completed';
