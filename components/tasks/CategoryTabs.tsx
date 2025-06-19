@@ -1,6 +1,6 @@
 import React from 'react';
 import { TaskCategory } from '../../types';
-import { TASK_CATEGORIES } from '../../constants';
+import { CATEGORY_TABS } from '../../constants';
 
 interface CategoryTabsProps {
   selectedCategory: TaskCategory;
@@ -10,7 +10,7 @@ interface CategoryTabsProps {
 export const CategoryTabs: React.FC<CategoryTabsProps> = ({ selectedCategory, onSelectCategory }) => {
   return (
     <div className="mb-8 flex flex-wrap justify-center sm:justify-start -m-1">
-      {TASK_CATEGORIES.map((category) => (
+      {CATEGORY_TABS.map((category) => (
         <button
           key={category}
           onClick={() => onSelectCategory(category)}
