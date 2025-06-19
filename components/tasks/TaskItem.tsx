@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Task } from '../../types';
 import { updateTask, deleteTask } from '../../services/firebaseService';
 import { Button } from '../ui/Button';
-import { CheckSquare, Square, Trash2, Loader2, Edit, Save, XCircle, Calendar, Flag } from 'lucide-react';
+import { CheckSquare, Square, Trash2, Loader2, Edit, Save, XCircle, Calendar, Flag, GripVertical } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TaskItemProps {
   task: Task;
@@ -14,6 +16,23 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(task.text);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : 'auto',
+    opacity: isDragging ? 0.8 : 1,
+  };
+
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -74,19 +93,26 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
 
 
   return (
-    <li className={`flex flex-col p-4 bg-surface dark:bg-surface rounded-xl shadow-lg mb-4 transition-all duration-300 ease-in-out border border-borderLight dark:border-borderDark hover:shadow-xl hover:border-primary/50
-      ${task.completed ? 'opacity-60 bg-surface/60 dark:bg-surface/60' : 'opacity-100'}
-      ${isDeleting ? 'scale-95 opacity-50' : ''}
-    `}>
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center flex-grow min-w-0">
-          <button
-            onClick={handleToggleComplete}
-            disabled={isCompleting || isDeleting || isEditing}
-            className="mr-4 p-1 rounded-md text-primary focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-surface transition-colors"
-          >
-            {isCompleting ? <Loader2 size={22} className="animate-spin text-primary" /> : task.completed ? <CheckSquare size={22} className="text-green-500" /> : <Square size={22} className="text-textSecondary dark:text-textSecondary" />}
-          </button>
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`flex flex-col p-4 bg-surface dark:bg-surface rounded-xl shadow-lg mb-4 transition-all duration-300 ease-in-out border border-borderLight dark:border-borderDark hover:shadow-xl hover:border-primary/50
+        ${task.completed ? 'opacity-60 bg-surface/60 dark:bg-surface/60' : 'opacity-100'}
+        ${isDeleting ? 'scale-95 opacity-50' : ''}
+      `}
+    >
+        <div className="flex items-center justify-between w-full">
+            <div className="flex items-center flex-grow min-w-0">
+                <button {...attributes} {...listeners} className="mr-2 p-1 cursor-grab active:cursor-grabbing touch-none text-textMuted focus:outline-none focus:ring-1 focus:ring-primary">
+                    <GripVertical size={20} />
+                </button>
+                <button
+                    onClick={handleToggleComplete}
+                    disabled={isCompleting || isDeleting || isEditing}
+                    className="mr-4 p-1 rounded-md text-primary focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-1 focus:ring-offset-surface transition-colors"
+                    >
+                    {isCompleting ? <Loader2 size={22} className="animate-spin text-primary" /> : task.completed ? <CheckSquare size={22} className="text-green-500" /> : <Square size={22} className="text-textSecondary dark:text-textSecondary" />}
+                </button>
           
           {isEditing ? (
             <input

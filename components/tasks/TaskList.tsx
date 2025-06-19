@@ -1,9 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { getTasksStream } from '../../services/firebaseService';
+import { getTasksStream, updateTaskOrder } from '../../services/firebaseService';
 import { Task, TaskCategory, AppUser } from '../../types';
 import { TaskItem } from './TaskItem';
 import { Spinner } from '../ui/Spinner';
-import { Inbox } from 'lucide-react'; // Icon for empty state
+import { Inbox } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+
 
 interface TaskListProps {
   selectedCategory: TaskCategory;
@@ -15,6 +31,13 @@ export const TaskList: React.FC<TaskListProps> = ({ selectedCategory, user }) =>
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     if (!user) {
       setTasks([]);
@@ -24,23 +47,45 @@ export const TaskList: React.FC<TaskListProps> = ({ selectedCategory, user }) =>
 
     setIsLoading(true);
     setError(null);
-    
+
     const unsubscribe = getTasksStream(
       user.uid,
       selectedCategory,
       (fetchedTasks) => {
         setTasks(fetchedTasks);
         setIsLoading(false);
-        setError(null); 
+        setError(null);
       }
     );
-    
+
     return () => {
       if (unsubscribe) {
         unsubscribe();
       }
     };
-  }, [selectedCategory, user]); // Simplified dependency array, user object itself is fine
+  }, [selectedCategory, user]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setTasks((currentTasks) => {
+        const oldIndex = currentTasks.findIndex((t) => t.id === active.id);
+        const newIndex = currentTasks.findIndex((t) => t.id === over.id);
+        const reorderedTasks = arrayMove(currentTasks, oldIndex, newIndex);
+
+        // Update position based on new order for Firestore
+        const updatedTasksForFirebase = reorderedTasks.map((task, index) => ({
+            ...task,
+            position: index,
+        }));
+        updateTaskOrder(updatedTasksForFirebase);
+
+        return reorderedTasks;
+      });
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -66,10 +111,14 @@ export const TaskList: React.FC<TaskListProps> = ({ selectedCategory, user }) =>
   }
 
   return (
-    <ul className="space-y-0"> {/* Adjusted space-y if TaskItem has mb */}
-      {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} />
-      ))}
-    </ul>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+        <ul className="space-y-0">
+          {tasks.map((task) => (
+            <TaskItem key={task.id} task={task} />
+          ))}
+        </ul>
+      </SortableContext>
+    </DndContext>
   );
 };

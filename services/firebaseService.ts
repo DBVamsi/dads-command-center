@@ -21,10 +21,11 @@ import {
   Timestamp,
   orderBy,
   Firestore,
-  Unsubscribe
+  Unsubscribe,
+  writeBatch // Import writeBatch
 } from 'firebase/firestore';
 import { FIREBASE_CONFIG } from '../constants';
-import { Task, TaskCategory, Priority } from '../types';
+import { Task, TaskCategory, Priority }       from '../types';
 
 let app: FirebaseApp;
 let auth: Auth;
@@ -92,6 +93,7 @@ export const addTask = async (
       createdAt: Timestamp.now(),
       priority: details.priority || 'Medium',
       dueDate: details.dueDate ? Timestamp.fromDate(new Date(details.dueDate)) : null,
+      position: Date.now(), // Set initial position
     });
     return docRef.id;
   } catch (error) {
@@ -114,9 +116,7 @@ export const getTasksStream = (
     collection(db, 'tasks'),
     where('userId', '==', userId),
     where('category', '==', category),
-    orderBy('completed'),
-    orderBy('dueDate', 'asc'),
-    orderBy('createdAt', 'desc')
+    orderBy('position', 'asc') // Order by the new position field
   );
 
   return onSnapshot(q, (querySnapshot) => {
@@ -128,6 +128,22 @@ export const getTasksStream = (
     console.error("Error fetching tasks in real-time:", error);
     callback([]);
   });
+};
+
+// New function to update task order in a batch
+export const updateTaskOrder = async (tasks: Task[]): Promise<void> => {
+    if (!db) throw new Error("Firestore not initialized.");
+    const batch = writeBatch(db);
+    tasks.forEach((task, index) => {
+        const taskRef = doc(db, 'tasks', task.id);
+        batch.update(taskRef, { position: index });
+    });
+    try {
+        await batch.commit();
+    } catch (error) {
+        console.error("Error updating task order:", error);
+        throw error;
+    }
 };
 
 export const updateTask = async (

@@ -1,4 +1,3 @@
-
 import { Timestamp } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 
@@ -20,6 +19,7 @@ export interface Task {
   userId: string;
   priority?: Priority;
   dueDate?: Timestamp | null;
+  position: number; // Add this field
 }
 
 export type AppUser = FirebaseUser | null;
