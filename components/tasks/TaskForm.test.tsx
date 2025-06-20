@@ -118,7 +118,7 @@ describe('TaskForm AI Features', () => {
     const mockResponse: ParsedTaskData = {
       title: 'AI Task Title',
       description: 'AI task description.',
-      category: 'Work',
+      category: TaskCategory.WORK, // Use actual enum value
       dueDate: '2024-07-26',
     };
     parseTaskWithAIMock.mockResolvedValue(mockResponse);
@@ -133,9 +133,49 @@ describe('TaskForm AI Features', () => {
     fireEvent.click(aiButton);
 
     await waitFor(() => {
-      expect(mainTaskInput).toHaveValue('AI Task Title - AI task description. (Category suggestion: Work)');
+      const expectedText = `AI Task Title\n\nDetails:\nAI task description. (AI Suggested Category: ${TaskCategory.WORK})`;
+      expect(mainTaskInput).toHaveValue(expectedText);
       expect(dueDateInput.value).toBe('2024-07-26');
       expect(aiInput.value).toBe('');
+    });
+  });
+
+  test('populates main task input correctly when only title and description are provided by AI', async () => {
+    const mockResponse: ParsedTaskData = {
+      title: 'AI Task Title Only',
+      description: 'AI task description only.',
+      // No category, no due date
+    };
+    parseTaskWithAIMock.mockResolvedValue(mockResponse);
+    render(<TaskForm {...defaultProps} />);
+    const mainTaskInput = screen.getByPlaceholderText(/Add a new task for GENERAL.../i);
+    const dueDateInput = screen.getByLabelText(/Due Date/i) as HTMLInputElement;
+
+    // Simulate AI processing trigger
+    fireEvent.change(screen.getByPlaceholderText(/Or describe your task for AI.../i), { target: { value: 'Simple task' } });
+    fireEvent.click(screen.getByLabelText(/Process with AI/i));
+
+    await waitFor(() => {
+      const expectedText = `AI Task Title Only\n\nDetails:\nAI task description only.`;
+      expect(mainTaskInput).toHaveValue(expectedText);
+      expect(dueDateInput.value).toBe(''); // Ensure due date is not set
+    });
+  });
+
+  test('populates main task input correctly when only title is provided by AI', async () => {
+    const mockResponse: ParsedTaskData = {
+      title: 'Just A Title',
+      // No description, no category, no due date
+    };
+    parseTaskWithAIMock.mockResolvedValue(mockResponse);
+    render(<TaskForm {...defaultProps} />);
+    const mainTaskInput = screen.getByPlaceholderText(/Add a new task for GENERAL.../i);
+
+    fireEvent.change(screen.getByPlaceholderText(/Or describe your task for AI.../i), { target: { value: 'Title only task' } });
+    fireEvent.click(screen.getByLabelText(/Process with AI/i));
+
+    await waitFor(() => {
+      expect(mainTaskInput).toHaveValue('Just A Title');
     });
   });
 
