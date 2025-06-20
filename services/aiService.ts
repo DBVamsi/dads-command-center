@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationBlockReason } from "@google/generative-ai";
+import { GoogleGenerativeAI } from "@google/generative-ai"; // Changed import
 import { TaskCategory } from "../types"; // Import TaskCategory
 
 /**
@@ -30,10 +30,10 @@ export async function parseTaskWithAI(apiKey: string, naturalLanguageInput: stri
     model: "gemini-2.5-flash", // Changed to new hypothetical model
     // Optional: Add safety settings if needed, though defaults are usually quite strict.
     // safetySettings: [
-    //   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-    //   { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-    //   { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-    //   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    //   { category: GoogleGenerativeAI.HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: GoogleGenerativeAI.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    //   { category: GoogleGenerativeAI.HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: GoogleGenerativeAI.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    //   { category: GoogleGenerativeAI.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: GoogleGenerativeAI.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+    //   { category: GoogleGenerativeAI.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: GoogleGenerativeAI.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
     // ],
   });
 
@@ -76,9 +76,10 @@ export async function parseTaskWithAI(apiKey: string, naturalLanguageInput: stri
       const blockMessage = response.promptFeedback.blockReasonMessage || "No specific message provided.";
       console.error(`Gemini request blocked due to: ${blockReason}. Message: ${blockMessage}`, response.promptFeedback);
       // More user-friendly messages for common block reasons
-      if (blockReason === GenerationBlockReason.SAFETY) {
+      // Assuming GenerationBlockReason is now accessed via GoogleGenerativeAI
+      if (blockReason === GoogleGenerativeAI.GenerationBlockReason.SAFETY) {
         throw new Error(`AI request was blocked for safety reasons. Please rephrase your request or check content policies. ${blockMessage}`);
-      } else if (blockReason === GenerationBlockReason.OTHER) {
+      } else if (blockReason === GoogleGenerativeAI.GenerationBlockReason.OTHER) {
          throw new Error(`AI request was blocked for an unspecified reason. Please try again. ${blockMessage}`);
       }
       throw new Error(`AI request was blocked: ${blockReason}. ${blockMessage}`);

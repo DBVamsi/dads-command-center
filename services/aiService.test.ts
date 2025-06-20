@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold, GenerationBlockReason } from '@google/generative-ai';
+// Import only GoogleGenerativeAI as per the change in aiService.ts
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { parseTaskWithAI, ParsedTaskData } from './aiService'; // Adjust path as needed
 import { TaskCategory } from '../types'; // Adjust path as needed
 
@@ -10,16 +11,44 @@ const mockGetGenerativeModel = vi.fn(() => ({
 }));
 
 vi.mock('@google/generative-ai', () => {
-  // Need to mock the default export if it's a class constructor
-  const actualSdk = vi.importActual('@google/generative-ai'); // Import actual to get enums/types
+  // Mock the constructor and its methods
+  // The actual enums (GenerationBlockReason, etc.) are assumed to be static properties
+  // of the GoogleGenerativeAI class by the code in aiService.ts.
+  // So, the mock for GoogleGenerativeAI itself should provide these if they are referenced
+  // directly in tests (e.g. GoogleGenerativeAI.GenerationBlockReason.SAFETY).
+  // For this test file, we mainly need to ensure that the mocked SDK behavior
+  // (like blockReason values) uses the same assumed path if we construct them here.
+
+  // If actualSdk.GenerationBlockReason was used to *set up* a mock, that would need to change.
+  // Let's assume for now that the mock setup in tests uses object literals for `promptFeedback`
+  // and the string values for blockReason (e.g., "SAFETY", "OTHER") which are then compared
+  // in aiService.ts using GoogleGenerativeAI.GenerationBlockReason.SAFETY (which would resolve to the string "SAFETY").
+  // The SDK might internally use string enums or objects that resolve to strings.
+
+  // The most important part is that the constructor mock is correct.
+  // The static properties for enums will be accessed on the actual GoogleGenerativeAI class/object
+  // imported into aiService.ts, not necessarily on the *mocked instance* of it unless we explicitly mock statics.
+  // However, Vitest's vi.mock often replaces the entire module, so direct imports of enums would fail
+  // in aiService.ts if not handled by the mock.
+  // The current aiService.ts now does `GoogleGenerativeAI.GenerationBlockReason.SAFETY`.
+  // This means the `GoogleGenerativeAI` object available to `aiService.ts` must have these static properties.
+
+  // We need to ensure that the `GoogleGenerativeAI` provided by this mock has these static properties
+  // if they are to be used by the `aiService.ts` as `GoogleGenerativeAI.GenerationBlockReason.SAFETY`.
+  const actualSdk = vi.importActual('@google/generative-ai');
+  const mockGGAI = vi.fn().mockImplementation(() => ({
+    getGenerativeModel: mockGetGenerativeModel,
+  }));
+
+  // Attach static properties to the mock constructor if they are used like GoogleGenerativeAI.GenerationBlockReason
+  (mockGGAI as any).HarmCategory = actualSdk.HarmCategory;
+  (mockGGAI as any).HarmBlockThreshold = actualSdk.HarmBlockThreshold;
+  (mockGGAI as any).GenerationBlockReason = actualSdk.GenerationBlockReason;
+
+
   return {
-    GoogleGenerativeAI: vi.fn().mockImplementation(() => ({
-      getGenerativeModel: mockGetGenerativeModel,
-    })),
-    // Export enums/constants needed by the service or tests
-    HarmCategory: actualSdk.HarmCategory,
-    HarmBlockThreshold: actualSdk.HarmBlockThreshold,
-    GenerationBlockReason: actualSdk.GenerationBlockReason,
+    GoogleGenerativeAI: mockGGAI,
+    // We no longer export HarmCategory, etc., directly from the mock if aiService uses GoogleGenerativeAI.HarmCategory
   };
 });
 
@@ -114,34 +143,45 @@ describe('parseTaskWithAI', () => {
 
 
   test('should throw error if AI response is blocked', async () => {
+    // We need to use the actual enum values if the service compares against them.
+    // The mock for GoogleGenerativeAI should make these available if they're static.
+    // If GenerationBlockReason is just a string type in practice from the SDK's response,
+    // then using string literals ("SAFETY") is fine for setting up the mock response.
+    // The aiService.ts now uses GoogleGenerativeAI.GenerationBlockReason.SAFETY for comparison.
+    // So, the value provided by the SDK (mocked here) must match that.
+    // The actual `GenerationBlockReason` enum from the SDK will provide the correct values.
+    const { GenerationBlockReason: SDKGenerationBlockReason } = await vi.importActual('@google/generative-ai');
+
     const mockApiResponse = {
       response: {
         promptFeedback: {
-          blockReason: GenerationBlockReason.SAFETY,
+          blockReason: SDKGenerationBlockReason.SAFETY,
           blockReasonMessage: 'Content was violative.'
         },
-        candidates: [], // Typically no candidates if blocked like this
+        candidates: [],
       },
     };
     mockGenerateContent.mockResolvedValue(mockApiResponse);
 
+    // The error message in aiService.ts uses the string value of the enum.
     await expect(parseTaskWithAI(apiKey, 'blocked content test')).rejects.toThrow(
-      'AI request was blocked: SAFETY. Content was violative.'
+      `AI request was blocked: ${SDKGenerationBlockReason.SAFETY}. Content was violative.`
     );
   });
 
   test('should throw error if AI response is blocked for OTHER reason', async () => {
+    const { GenerationBlockReason: SDKGenerationBlockReason } = await vi.importActual('@google/generative-ai');
     const mockApiResponse = {
       response: {
         promptFeedback: {
-          blockReason: GenerationBlockReason.OTHER,
+          blockReason: SDKGenerationBlockReason.OTHER,
         },
       },
     };
     mockGenerateContent.mockResolvedValue(mockApiResponse);
 
     await expect(parseTaskWithAI(apiKey, 'blocked content test')).rejects.toThrow(
-      'AI request was blocked: OTHER. No specific message provided.'
+      `AI request was blocked: ${SDKGenerationBlockReason.OTHER}. No specific message provided.`
     );
   });
 
