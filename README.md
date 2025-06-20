@@ -9,7 +9,7 @@ This contains everything you need to run your app locally.
 ### ✨ AI-Powered Task Creation
 
 - **Natural Language Input**: Simply type your task in plain English! For example, "call John about the project meeting next Tuesday at 2pm" or "buy groceries after work tomorrow".
-- **Smart Parsing**: Click the "Sparkles" button (✨) next to the dedicated AI input field. The application uses an AI model (powered by Gemini) to understand your input and automatically populate the main task details, such as the task title, description, and due date. This feature utilizes the `gemini-1.5-pro-latest` model for task parsing, and the AI suggestions are powered by real-time calls to the Gemini API.
+- **Smart Parsing**: Click the "Sparkles" button (✨) next to the dedicated AI input field. The application uses an AI model (powered by Gemini) to understand your input and automatically populate the main task details, such as the task title, description, and due date. This feature utilizes the `gemini-2.5-flash` model for task parsing, and the AI suggestions are powered by real-time calls to the Gemini API.
 - **Streamlined Workflow**: This helps you add tasks more quickly and naturally, letting the AI handle the structuring.
 - **User-Provided API Key**: To use the AI features, you now need to provide your own Gemini API key. This approach ensures fair usage, gives you control over your API consumption, and helps manage costs in a multi-user environment.
     - **How to Add Your Key**:

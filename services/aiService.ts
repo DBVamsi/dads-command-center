@@ -27,7 +27,7 @@ export async function parseTaskWithAI(apiKey: string, naturalLanguageInput: stri
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-pro-latest", // Changed model here
+    model: "gemini-2.5-flash", // Changed to new hypothetical model
     // Optional: Add safety settings if needed, though defaults are usually quite strict.
     // safetySettings: [
     //   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
@@ -151,7 +151,7 @@ export async function parseTaskWithAI(apiKey: string, naturalLanguageInput: stri
         throw new Error("AI request quota exceeded. Please try again later or check your Gemini project quotas.");
       }
       if (errorMessage.includes("model not found")) {
-        throw new Error("AI model (gemini-1.5-pro-latest) not found. This could be a temporary issue or configuration problem.");
+        throw new Error("AI model (gemini-2.5-flash) not found. This could be a temporary issue or configuration problem. Please ensure the model name is correct.");
       }
       throw new Error(`Failed to process task with AI: ${error.message}`);
     }
