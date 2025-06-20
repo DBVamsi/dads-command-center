@@ -1,0 +1,54 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all reads and writes to all documents
+    // It's good practice to start with this and then explicitly allow access.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Rules for other collections would go here, for example:
+    // match /tasks/{taskId} {
+    //   allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    //   // Or more granular rules for tasks
+    // }
+
+    // Rules for user_gemini_keys collection
+    // Users can only read, create, update, and delete their own API key document.
+    // The document ID is expected to be the user's UID.
+    match /user_gemini_keys/{userId} {
+      // Allow read if the requester is authenticated and their UID matches the document's {userId}.
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // Allow create if the requester is authenticated, their UID matches {userId},
+      // and they are creating a document with a 'key' field which is a string.
+      // This helps ensure some basic structure on create.
+      allow create: if request.auth != null && request.auth.uid == userId
+                       && request.resource.data.key is string;
+                       // && request.resource.data.size() == 1; // Optional: only 'key' field allowed
+
+      // Allow update if the requester is authenticated, their UID matches {userId},
+      // they are only updating the 'key' field, and the new key is a string.
+      // Prevents adding other fields or modifying unintended ones.
+      allow update: if request.auth != null && request.auth.uid == userId
+                       && request.resource.data.key is string
+                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['key']);
+                       // && request.resource.data.size() == resource.data.size(); // Ensures no fields are added/removed if not desired
+
+      // Allow delete if the requester is authenticated and their UID matches {userId}.
+      allow delete: if request.auth != null && request.auth.uid == userId;
+
+      // Note: The above 'create', 'update', 'delete' can be combined into 'write'
+      // if the conditions are the same or can be merged.
+      // For example, a simpler (but less restrictive on document structure) version:
+      // allow write: if request.auth != null && request.auth.uid == userId;
+      //
+      // The more granular rules above provide better data integrity for the 'key' field.
+    }
+
+    // Add other collection rules below as needed.
+
+  }
+}

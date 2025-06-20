@@ -22,7 +22,9 @@ import {
   orderBy,
   Firestore,
   Unsubscribe,
-  writeBatch // Import writeBatch
+  writeBatch, // Import writeBatch
+  setDoc,     // Added for saveUserApiKey
+  getDoc      // Added for getUserApiKey
 } from 'firebase/firestore';
 import { FIREBASE_CONFIG } from '../constants';
 import { Task, TaskCategory, Priority }       from '../types';
@@ -176,3 +178,72 @@ export const deleteTask = async (taskId: string): Promise<void> => {
 };
 
 export { auth, db };
+
+// Collection name for user API keys
+const USER_API_KEY_COLLECTION = 'user_gemini_keys';
+
+/**
+ * Saves a user's Gemini API key to Firestore.
+ * The key is stored directly; security relies on Firestore security rules.
+ * TODO: Explore client-side encryption for the API key before storing, if enhanced security is needed beyond Firestore rules.
+ * @param userId The ID of the user.
+ * @param apiKey The API key to save.
+ */
+export const saveUserApiKey = async (userId: string, apiKey: string): Promise<void> => {
+  if (!db) throw new Error("Firestore not initialized.");
+  if (!userId) throw new Error("User ID is required to save API key.");
+  if (!apiKey) throw new Error("API key is required."); // Or handle as a delete operation if apiKey is empty? For now, require it.
+
+  try {
+    const apiKeyRef = doc(db, USER_API_KEY_COLLECTION, userId);
+    await setDoc(apiKeyRef, { key: apiKey });
+    console.log(`API Key for user ${userId} saved. Storage relies on Firestore security rules.`);
+  } catch (error) {
+    console.error(`Error saving API key for user ${userId}:`, error);
+    throw error; // Re-throw to allow caller to handle
+  }
+};
+
+/**
+ * Retrieves a user's Gemini API key from Firestore.
+ * @param userId The ID of the user.
+ * @returns The API key string if found, otherwise null.
+ */
+export const getUserApiKey = async (userId: string): Promise<string | null> => {
+  if (!db) throw new Error("Firestore not initialized.");
+  if (!userId) throw new Error("User ID is required to fetch API key.");
+
+  try {
+    const apiKeyRef = doc(db, USER_API_KEY_COLLECTION, userId);
+    const docSnap = await getDoc(apiKeyRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return data?.key || null; // Return the key if it exists, otherwise null
+    } else {
+      console.log(`No API key found for user ${userId}.`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error fetching API key for user ${userId}:`, error);
+    throw error; // Re-throw
+  }
+};
+
+/**
+ * Deletes a user's Gemini API key from Firestore.
+ * @param userId The ID of the user.
+ */
+export const deleteUserApiKey = async (userId: string): Promise<void> => {
+  if (!db) throw new Error("Firestore not initialized.");
+  if (!userId) throw new Error("User ID is required to delete API key.");
+
+  try {
+    const apiKeyRef = doc(db, USER_API_KEY_COLLECTION, userId);
+    await deleteDoc(apiKeyRef);
+    console.log(`API Key for user ${userId} deleted successfully.`);
+  } catch (error) {
+    console.error(`Error deleting API key for user ${userId}:`, error);
+    throw error; // Re-throw
+  }
+};

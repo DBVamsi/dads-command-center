@@ -5,14 +5,20 @@ import { CategoryTabs } from './CategoryTabs';
 import { TaskForm } from './TaskForm';
 import { TaskList } from './TaskList';
 import { Button } from '../ui/Button';
-import { LogOut, LayoutDashboard, Moon, Sun } from 'lucide-react';
+import { LogOut, LayoutDashboard, Moon, Sun, Settings as SettingsIcon } from 'lucide-react'; // Added SettingsIcon
 import useLocalStorageState from 'use-local-storage-state';
 
 interface TaskDashboardProps {
   user: AppUser;
 }
 
-const Header: React.FC<{ onSignOut: () => void; userName?: string | null }> = React.memo(({ onSignOut, userName }) => {
+interface HeaderProps {
+  onSignOut: () => void;
+  userName?: string | null;
+  onToggleSettings: () => void; // New prop for settings
+}
+
+const Header: React.FC<HeaderProps> = React.memo(({ onSignOut, userName, onToggleSettings }) => {
     const [theme, setTheme] = useLocalStorageState('theme', { defaultValue: 'dark' });
 
     useEffect(() => {
@@ -39,8 +45,11 @@ const Header: React.FC<{ onSignOut: () => void; userName?: string | null }> = Re
           </div>
           <div className="flex items-center space-x-4">
             {userName && <span className="text-gray-600 dark:text-textSecondary text-sm sm:text-base hidden sm:block">Hi, {userName.split(' ')[0]}!</span>}
-            <Button onClick={toggleTheme} variant="outline" size="sm" className="p-2">
+            <Button onClick={toggleTheme} variant="outline" size="sm" className="p-2" aria-label="Toggle theme">
                 {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </Button>
+            <Button onClick={onToggleSettings} variant="outline" size="sm" className="p-2" aria-label="Open settings">
+                <SettingsIcon size={18} />
             </Button>
             <Button onClick={onSignOut} variant="outline" size="md" leftIcon={<LogOut size={18} />}>
               Sign Out
@@ -56,6 +65,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory>(TaskCategory.ALL);
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [showSignOutError, setShowSignOutError] = useState<string | null>(null);
+  const [showUserSettings, setShowUserSettings] = useState(false); // State for settings visibility
 
   const handleSignOut = async () => {
     setShowSignOutError(null);
@@ -71,12 +81,38 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
     return <p className="text-center text-textPrimary py-10">Loading user data or user not found...</p>; 
   }
   
+  const toggleUserSettings = () => {
+    setShowUserSettings(prev => !prev);
+  };
+
+  if (!user) {
+    return <p className="text-center text-textPrimary py-10">Loading user data or user not found...</p>;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-transparent text-gray-800 dark:text-textPrimary">
-      <Header onSignOut={handleSignOut} userName={user.displayName || user.email} />
+      <Header
+        onSignOut={handleSignOut}
+        userName={user.displayName || user.email}
+        onToggleSettings={toggleUserSettings} // Pass the toggle function
+      />
       
       <main className="container mx-auto px-4 py-8 flex-grow">
         {showSignOutError && <p className="text-center text-danger mb-4 bg-danger/10 p-3 rounded-lg border border-danger">{showSignOutError}</p>}
+
+        {/* User Settings Section */}
+        {showUserSettings && (
+          <section className="my-6 p-6 bg-surface dark:bg-gray_800 rounded-xl shadow-lg border border-borderLight dark:border-borderDark">
+            <h2 className="text-2xl font-semibold text-textPrimary dark:text-textPrimary mb-4">
+              User Settings
+            </h2>
+            <p className="text-textSecondary dark:text-textSecondary">
+              API Key Management and other settings will be here.
+            </p>
+            {/* Future settings components will go here */}
+          </section>
+        )}
+
         <CategoryTabs selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
         <div className="mb-6 flex flex-wrap justify-center sm:justify-start -m-1">
           {(['all', 'active', 'completed'] as TaskFilter[]).map((f) => (
