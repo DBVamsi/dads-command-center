@@ -3,6 +3,7 @@ import { onAuthUserChanged } from './services/firebaseService';
 import { AppUser } from './types';
 import { LoginScreen } from './components/auth/LoginScreen';
 import { TaskDashboard } from './components/tasks/TaskDashboard';
+import { ApiKeyProvider } from './context/ApiKeyContext'; // Import ApiKeyProvider
 import { Spinner } from './components/ui/Spinner';
 import { FIREBASE_CONFIG } from './constants';
 import { AlertTriangle } from 'lucide-react'; // Icon for error state
@@ -60,12 +61,17 @@ const App: React.FC = () => {
     );
   }
 
-
-  if (!user) {
-    return <LoginScreen />;
-  }
-
-  return <TaskDashboard user={user} />;
+  // The ApiKeyProvider should wrap the part of the app that depends on user authentication
+  // and needs access to the API key. It will react to user changes.
+  return (
+    <ApiKeyProvider userId={user ? user.uid : null}>
+      {!user ? (
+        <LoginScreen />
+      ) : (
+        <TaskDashboard user={user} />
+      )}
+    </ApiKeyProvider>
+  );
 };
 
 export default App;

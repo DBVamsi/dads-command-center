@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { addTask } from '../../services/firebaseService';
-import { parseTaskWithAI, ParsedTaskData } from '../../services/aiService'; // Import AI service
+import { parseTaskWithAI, ParsedTaskData } from '../../services/aiService';
+import { useApiKey } from '../../context/ApiKeyContext'; // Import useApiKey
 import { TaskCategory, AppUser, Priority } from '../../types';
 import { Button } from '../ui/Button';
-import { PlusCircle, Sparkles } from 'lucide-react';
+import { PlusCircle, Sparkles, AlertCircle } from 'lucide-react'; // Added AlertCircle for missing key message
 import { Spinner } from '../ui/Spinner';
 
 interface TaskFormProps {
@@ -12,6 +13,12 @@ interface TaskFormProps {
 }
 
 export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) => {
+  const {
+    userApiKey,
+    isApiKeyLoading,
+    // apiKeyError: contextApiKeyError // Optionally use this for broader API key issues
+  } = useApiKey();
+
   const [taskText, setTaskText] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<Priority>('Medium');
@@ -21,9 +28,11 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
   // AI-specific state
   const [aiTaskText, setAiTaskText] = useState('');
   const [isAiProcessing, setIsAiProcessing] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null); // For AI-specific errors in this form
 
   const canAdd = selectedCategory !== TaskCategory.ALL;
+  const isAiDisabled = isAiProcessing || isLoading || !canAdd || isApiKeyLoading || !userApiKey;
+  const showMissingApiKeyMessage = !isApiKeyLoading && !userApiKey && canAdd;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,13 +63,18 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
 
   const handleAiProcessClick = async () => {
     if (!aiTaskText.trim()) return;
+    if (!userApiKey) {
+      setAiError("API key is missing. Please configure it in User Settings.");
+      return;
+    }
 
     setIsAiProcessing(true);
     setAiError(null);
-    setError(null); // Clear main errors as well
+    setError(null); // Clear main form errors as well
 
     try {
-      const parsedData: ParsedTaskData = await parseTaskWithAI(aiTaskText);
+      // Pass the userApiKey obtained from context
+      const parsedData: ParsedTaskData = await parseTaskWithAI(userApiKey, aiTaskText);
 
       let combinedTaskText = parsedData.title || '';
       if (parsedData.description) {
@@ -125,25 +139,38 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
         <textarea
           value={aiTaskText}
           onChange={(e) => setAiTaskText(e.target.value)}
-          placeholder={canAdd ? "Or describe your task for AI..." : "Select a category tab first to use AI"}
+          placeholder={canAdd ? (showMissingApiKeyMessage ? "API Key needed for AI features" : "Or describe your task for AI...") : "Select a category tab first to use AI"}
           className="flex-grow w-full bg-transparent p-3 text-textPrimary dark:text-textPrimary placeholder-textMuted dark:placeholder-textMuted focus:outline-none focus:ring-2 focus:ring-primary rounded-lg border border-borderLight dark:border-borderDark resize-none"
           rows={2}
-          disabled={isAiProcessing || isLoading || !canAdd}
+          disabled={isAiDisabled || showMissingApiKeyMessage} // Disable if AI is generally disabled or specifically if key is missing
           aria-label="Describe task for AI"
         />
         <Button
           type="button"
           onClick={handleAiProcessClick}
-          disabled={isAiProcessing || isLoading || !aiTaskText.trim() || !canAdd}
+          disabled={isAiDisabled || !aiTaskText.trim() || showMissingApiKeyMessage}
           variant="outline"
           size="icon"
-          className="px-3 py-3 flex-shrink-0" // Added flex-shrink-0
+          className="px-3 py-3 flex-shrink-0"
           aria-label="Process with AI"
         >
-          {isAiProcessing ? <Spinner size="sm" /> : <Sparkles size={20} />}
+          {isAiProcessing || isApiKeyLoading ? <Spinner size="sm" /> : <Sparkles size={20} />}
         </Button>
       </div>
-      {aiError && <p className="mt-2 text-sm text-danger">{aiError}</p>}
+
+      {/* Display AI-specific error from this form */}
+      {aiError && <p className="mt-2 text-sm text-danger flex items-center"><AlertCircle size={16} className="mr-2 flex-shrink-0" /> {aiError}</p>}
+
+      {/* Display message if API key is missing and not loading */}
+      {showMissingApiKeyMessage && (
+        <div className="mt-2 text-sm text-orange-600 dark:text-orange-400 p-2 rounded-md border border-orange-500/50 bg-orange-500/10 flex items-center">
+          <AlertCircle size={16} className="mr-2 flex-shrink-0" />
+          Add your Gemini API key in User Settings to enable AI-powered task creation.
+        </div>
+      )}
+      {/* Optionally display contextApiKeyError if needed
+      {contextApiKeyError && <p className="mt-2 text-sm text-danger">Context Error: {contextApiKeyError}</p>}
+      */}
 
       <div className="mt-4 flex flex-col sm:flex-row items-center gap-4">
         <div className="w-full sm:w-1/2">

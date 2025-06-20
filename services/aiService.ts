@@ -16,19 +16,20 @@ export interface ParsedTaskData {
  *
  * @param naturalLanguageInput The user's input string (e.g., "buy milk tomorrow evening").
  * @returns A promise that resolves to ParsedTaskData.
- * @throws Error if the AI API key is not configured or if the AI processing fails.
+ * @param apiKey The Gemini API key.
+ * @param naturalLanguageInput The user's input string (e.g., "buy milk tomorrow evening").
+ * @returns A promise that resolves to ParsedTaskData.
+ * @throws Error if the API key is missing or if the AI processing fails.
  */
-export async function parseTaskWithAI(naturalLanguageInput: string): Promise<ParsedTaskData> {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-  if (!apiKey) {
-    console.error('Gemini API key not found in environment variables (VITE_GEMINI_API_KEY). Check your .env file and ensure it is prefixed with VITE_.');
-    throw new Error('AI service is not configured. Missing API key.');
+export async function parseTaskWithAI(apiKey: string, naturalLanguageInput: string): Promise<ParsedTaskData> {
+  if (!apiKey || apiKey.trim() === '') {
+    console.error('Gemini API key is missing in parseTaskWithAI call.');
+    throw new Error('Gemini API key is missing. Please configure it in settings to use AI features.');
   }
 
   // Placeholder for actual Gemini API call
   console.log(`Simulating AI processing for: "${naturalLanguageInput}"`);
-  console.log('Using API Key (first 5 chars):', apiKey.substring(0, 5)); // Be careful not to log the full key in production
+  console.log('Using provided API Key (first 5 chars):', apiKey.substring(0, 5)); // Be careful not to log the full key in production
 
   try {
     // Simulate network delay
@@ -104,18 +105,34 @@ if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test_direct_exec
   (globalThis as any).import = (globalThis as any).import || {};
   (globalThis as any).import.meta = (globalThis as any).import.meta || {};
   (globalThis as any).import.meta.env = (globalThis as any).import.meta.env || {};
-  (globalThis as any).import.meta.env.VITE_GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY_CLI_TEST;
+  // This is a hack to simulate import.meta.env for direct node execution.
+  // Not recommended for actual testing within a Vite project.
+  // (globalThis as any).importMetaEnvBackup = (globalThis as any).importMeta?.env; // backup if exists
+  // (globalThis as any).import = (globalThis as any).import || {};
+  // (globalThis as any).import.meta = (globalThis as any).import.meta || {};
+  // (globalThis as any).import.meta.env = (globalThis as any).import.meta.env || {};
+  // (globalThis as any).import.meta.env.VITE_GEMINI_API_KEY = process.env.VITE_GEMINI_API_KEY_CLI_TEST;
+  const testApiKey = process.env.VITE_GEMINI_API_KEY_CLI_TEST || "testkey123";
+
 
   (async () => {
     try {
-      console.log('Running direct execution test with simulated import.meta.env.VITE_GEMINI_API_KEY:', import.meta.env.VITE_GEMINI_API_KEY);
+      console.log('Running direct execution test with CLI-provided or default API_KEY:', testApiKey);
       const input1 = "buy groceries tomorrow at 5pm";
-      const parsed1 = await parseTaskWithAI(input1);
+      const parsed1 = await parseTaskWithAI(testApiKey, input1);
       console.log(`Input: "${input1}" => Parsed:`, parsed1);
 
       const input2 = "Schedule a meeting with John for next Monday";
-      const parsed2 = await parseTaskWithAI(input2);
+      const parsed2 = await parseTaskWithAI(testApiKey, input2);
       console.log(`Input: "${input2}" => Parsed:`, parsed2);
+
+      // Test missing API key
+      try {
+        console.log("\nTesting with missing API key (should throw error):");
+        await parseTaskWithAI("", "test missing key");
+      } catch (e) {
+        console.log("Correctly threw error for missing key:", (e as Error).message);
+      }
 
     } catch (e) {
       console.error("Direct execution test failed:", e);
