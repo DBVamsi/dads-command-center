@@ -116,7 +116,7 @@ export const getTasksStream = (
   const q = query(
     collection(db, 'tasks'),
     where('userId', '==', userId),
-    where('category', '==', category),
+    ...(category !== TaskCategory.ALL ? [where('category', '==', category)] : []),
     ...(filter === 'active' ? [where('completed', '==', false)] : []),
     ...(filter === 'completed' ? [where('completed', '==', true)] : []),
     orderBy('position', 'asc') // Order by the new position field

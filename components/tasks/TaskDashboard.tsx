@@ -6,7 +6,6 @@ import { TaskForm } from './TaskForm';
 import { TaskList } from './TaskList';
 import { Button } from '../ui/Button';
 import { LogOut, LayoutDashboard, Moon, Sun } from 'lucide-react';
-import { TASK_CATEGORIES } from '../../constants';
 import useLocalStorageState from 'use-local-storage-state';
 
 interface TaskDashboardProps {
@@ -54,7 +53,7 @@ const Header: React.FC<{ onSignOut: () => void; userName?: string | null }> = Re
 Header.displayName = 'Header';
 
 export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
-  const [selectedCategory, setSelectedCategory] = useState<TaskCategory>(TASK_CATEGORIES[0]);
+  const [selectedCategory, setSelectedCategory] = useState<TaskCategory>(TaskCategory.ALL);
   const [filter, setFilter] = useState<TaskFilter>('all');
   const [showSignOutError, setShowSignOutError] = useState<string | null>(null);
 

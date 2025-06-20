@@ -2,6 +2,7 @@ import { Timestamp } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 
 export enum TaskCategory {
+  ALL = 'All',
   WIFE = 'Wife',
   DAUGHTER = 'Daughter',
   WORK = 'Work',

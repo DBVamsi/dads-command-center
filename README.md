@@ -2,6 +2,11 @@
 
 This contains everything you need to run your app locally.
 
+## Features
+
+- Central "All" tab to view tasks from every category at once.
+- When viewing "All", tasks display a tag for their original category.
+
 ## Run Locally
 
 **Prerequisites:**  Node.js
