@@ -76,25 +76,38 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
       // Pass the userApiKey obtained from context
       const parsedData: ParsedTaskData = await parseTaskWithAI(userApiKey, aiTaskText);
 
-      let combinedTaskText = parsedData.title || '';
-      if (parsedData.description) {
-        combinedTaskText += (combinedTaskText ? ' - ' : '') + parsedData.description;
-      }
-      // Append AI-suggested category to description for now, as directly setting category is complex
+      let newTitle = parsedData.title || '';
+      let newDescription = parsedData.description || '';
+      let categoryHint = '';
+
+      // Handle Category
       if (parsedData.category) {
-        combinedTaskText += ` (Category suggestion: ${parsedData.category})`;
+        const isValidCategory = Object.values(TaskCategory).includes(parsedData.category as TaskCategory);
+        if (isValidCategory && parsedData.category !== TaskCategory.ALL) {
+          // Cannot directly set selectedCategory prop. Append as a clearer hint.
+          // If the current selectedCategory prop is different, this hint is useful.
+          // If it's the same, it's just a confirmation.
+          categoryHint = ` (AI Suggested Category: ${parsedData.category})`;
+        } else {
+          console.warn(`AI suggested category "${parsedData.category}" is invalid or 'ALL'. Ignoring for direct assignment.`);
+          // Optionally, could append a different type of hint or nothing.
+          // categoryHint = ` (AI raw category suggestion: ${parsedData.category})`;
+        }
       }
 
-      setTaskText(combinedTaskText);
+      let combinedText = newTitle;
+      if (newDescription) {
+        combinedText += `\n\nDetails:\n${newDescription}`;
+      }
+      if (categoryHint) {
+        combinedText += categoryHint; // Append category hint to the main text
+      }
+      setTaskText(combinedText);
 
+      // Handle Due Date
+      // aiService now validates the format to YYYY-MM-DD or removes it.
       if (parsedData.dueDate) {
-        // Basic validation for YYYY-MM-DD format, can be improved
-        if (/^\d{4}-\d{2}-\d{2}$/.test(parsedData.dueDate)) {
-          setDueDate(parsedData.dueDate);
-        } else {
-          console.warn(`AI returned dueDate in incorrect format: ${parsedData.dueDate}. Expected YYYY-MM-DD.`);
-          // Optionally set an aiError here or append to description
-        }
+        setDueDate(parsedData.dueDate);
       }
 
       setAiTaskText(''); // Clear AI input field

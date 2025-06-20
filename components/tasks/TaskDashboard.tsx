@@ -86,6 +86,11 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
   const [keyOpError, setKeyOpError] = useState<string | null>(null);
   const [keyOpSuccessMessage, setKeyOpSuccessMessage] = useState<string | null>(null);
 
+  const handleApiKeyFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    handleSaveApiKey();
+  };
+
   const handleSignOut = async () => {
     setShowSignOutError(null);
     try {
@@ -196,36 +201,41 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
                 Manage your Gemini API key for AI-powered features. Your key is stored securely.
               </p>
 
-              <div className="mb-4">
-                <label htmlFor="apiKeyInput" className="block text-sm font-medium text-textSecondary dark:text-textSecondary mb-1">
-                  API Key
-                </label>
-                <input
-                  type="password"
-                  id="apiKeyInput"
-                  value={apiKeyInputValue}
-                  onChange={(e) => {
-                    setApiKeyInputValue(e.target.value);
-                    setKeyOpError(null); // Clear error when user types
-                    setKeyOpSuccessMessage(null); // Clear success message
-                  }}
-                  placeholder="Enter your Gemini API Key"
-                  className="w-full max-w-md bg-transparent p-2.5 text-textPrimary dark:text-textPrimary placeholder-textMuted dark:placeholder-textMuted focus:outline-none focus:ring-2 focus:ring-primary rounded-lg border border-borderLight dark:border-borderDark"
-                  disabled={isSavingKey || isDeletingKey || isGlobalApiKeyLoading}
-                />
-              </div>
+              <form onSubmit={handleApiKeyFormSubmit} className="space-y-4">
+                <div> {/* Grouping label and input */}
+                  <label htmlFor="apiKeyInput" className="block text-sm font-medium text-textSecondary dark:text-textSecondary mb-1">
+                    API Key
+                  </label>
+                  <input
+                    type="password"
+                    id="apiKeyInput"
+                    value={apiKeyInputValue}
+                    onChange={(e) => {
+                      setApiKeyInputValue(e.target.value);
+                      setKeyOpError(null); // Clear error when user types
+                      setKeyOpSuccessMessage(null); // Clear success message
+                    }}
+                    placeholder="Enter your Gemini API Key"
+                    className="w-full max-w-md bg-transparent p-2.5 text-textPrimary dark:text-textPrimary placeholder-textMuted dark:placeholder-textMuted focus:outline-none focus:ring-2 focus:ring-primary rounded-lg border border-borderLight dark:border-borderDark"
+                    disabled={isSavingKey || isDeletingKey || isGlobalApiKeyLoading}
+                  />
+                </div>
 
-              <div className="flex items-center space-x-3 mb-4">
                 <Button
+                  type="submit" // Important for form submission
                   variant="primary"
-                  onClick={handleSaveApiKey}
+                  // onClick={handleSaveApiKey} // Removed as form onSubmit handles it
                   disabled={!apiKeyInputValue.trim() || isSavingKey || isDeletingKey || isGlobalApiKeyLoading}
                   leftIcon={isSavingKey ? <Spinner size="sm" /> : undefined}
                 >
                   {isSavingKey ? 'Saving...' : 'Save API Key'}
                 </Button>
+              </form>
+
+              {/* Delete button and feedback messages remain outside the form, but related */}
+              <div className="mt-6 pt-4 border-t border-borderLight dark:border-borderDark/20">
                 <Button
-                  variant="danger" // Changed from danger_outline to danger
+                  variant="danger"
                   onClick={handleDeleteApiKey}
                   disabled={!userApiKey || isDeletingKey || isSavingKey || isGlobalApiKeyLoading}
                   leftIcon={isDeletingKey ? <Spinner size="sm" /> : undefined}
@@ -234,7 +244,7 @@ export const TaskDashboard: React.FC<TaskDashboardProps> = ({ user }) => {
                 </Button>
               </div>
 
-              {/* Combined feedback area */}
+              {/* Combined feedback area - consider placing this near both save and delete actions if universal */}
               <div className="h-10 mt-2 mb-2"> {/* Reserve space to prevent layout shifts */}
                 {keyOpError && (
                   <p className="text-sm text-danger flex items-center">
