@@ -6,8 +6,10 @@ import { CategoryTabs } from './CategoryTabs';
 import { TaskForm } from './TaskForm';
 import { TaskList } from './TaskList';
 import { Button } from '../ui/Button';
+
 import { Spinner } from '../ui/Spinner'; // Import Spinner
 import { LogOut, LayoutDashboard, Moon, Sun, Settings as SettingsIcon, AlertCircle, CheckCircle } from 'lucide-react';
+
 import useLocalStorageState from 'use-local-storage-state';
 
 interface TaskDashboardProps {

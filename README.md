@@ -6,6 +6,9 @@ This contains everything you need to run your app locally.
 
 - Central "All" tab to view tasks from every category at once.
 
+- When viewing "All", tasks display a tag for their original category.
+
+
 ### ✨ AI-Powered Task Creation
 
 - **Natural Language Input**: Simply type your task in plain English! For example, "call John about the project meeting next Tuesday at 2pm" or "buy groceries after work tomorrow".
@@ -18,6 +21,7 @@ This contains everything you need to run your app locally.
         3. Enter your personal Gemini API key into this field.
         4. Click the "Save" (or similar) button to store your key.
     - Your API key is securely associated with your account and will be used for all AI-powered actions you perform.
+
 
 ## Run Locally
 

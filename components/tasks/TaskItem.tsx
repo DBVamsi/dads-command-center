@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Task } from '../../types';
+import { Task, TaskCategory } from '../../types';
 import { updateTask, deleteTask } from '../../services/firebaseService';
 import { Button } from '../ui/Button';
 import { CheckSquare, Square, Trash2, Loader2, Edit, Save, XCircle, Calendar, Flag, GripVertical } from 'lucide-react';
@@ -8,9 +8,10 @@ import { CSS } from '@dnd-kit/utilities';
 
 interface TaskItemProps {
   task: Task;
+  showCategory?: boolean;
 }
 
-export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
+export const TaskItem: React.FC<TaskItemProps> = ({ task, showCategory }) => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -45,6 +46,13 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
     Medium: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
     Low: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   };
+
+  const categoryStyles = {
+    Wife: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+    Daughter: 'bg-pink-500/20 text-pink-400 border-pink-500/30',
+    Work: 'bg-green-500/20 text-green-400 border-green-500/30',
+    Chores: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+  } as const;
 
   const handleToggleComplete = async () => {
     setIsCompleting(true);
@@ -146,10 +154,15 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task }) => {
           )}
         </div>
       </div>
-      {(formattedDueDate || task.priority) && (
+      {(showCategory || formattedDueDate || task.priority) && (
         <div className="mt-2 pt-2 border-t border-borderLight/50 dark:border-borderDark/50 flex items-center gap-4 pl-11">
+            {showCategory && (
+                <div className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full border ${categoryStyles[task.category as Exclude<TaskCategory, TaskCategory.ALL>]}`}> 
+                    <span>{task.category}</span>
+                </div>
+            )}
             {task.priority && (
-                <div className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full border ${priorityStyles[task.priority]}`}>
+                <div className={`flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full border ${priorityStyles[task.priority]}`}> 
                     <Flag size={12} />
                     <span>{task.priority}</span>
                 </div>

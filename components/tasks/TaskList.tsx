@@ -117,7 +117,7 @@ export const TaskList: React.FC<TaskListProps> = ({ selectedCategory, filter, us
       <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
         <ul className="space-y-0">
           {tasks.map((task) => (
-            <TaskItem key={task.id} task={task} />
+            <TaskItem key={task.id} task={task} showCategory={selectedCategory === TaskCategory.ALL} />
           ))}
         </ul>
       </SortableContext>

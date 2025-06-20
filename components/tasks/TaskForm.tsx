@@ -22,6 +22,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
   const [taskText, setTaskText] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState<Priority>('Medium');
+
   const [isLoading, setIsLoading] = useState(false); // For main form submission
   const [error, setError] = useState<string | null>(null); // For main form errors
 
@@ -33,6 +34,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
   const canAdd = selectedCategory !== TaskCategory.ALL;
   const isAiDisabled = isAiProcessing || isLoading || !canAdd || isApiKeyLoading || !userApiKey;
   const showMissingApiKeyMessage = !isApiKeyLoading && !userApiKey && canAdd;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,12 +121,16 @@ export const TaskForm: React.FC<TaskFormProps> = ({ selectedCategory, user }) =>
           onChange={(e) => setTaskText(e.target.value)}
           placeholder={canAdd ? `Add a new task for ${selectedCategory}...` : "Select a category tab first"}
           className="flex-grow w-full bg-transparent p-3 text-textPrimary dark:text-textPrimary placeholder-textMuted dark:placeholder-textMuted focus:outline-none focus:ring-2 focus:ring-primary rounded-lg border border-borderLight dark:border-borderDark"
+
           disabled={isLoading || isAiProcessing || !canAdd}
+
           aria-label={`New task for ${selectedCategory}`}
         />
         <Button
           type="submit"
+
           disabled={isLoading || isAiProcessing || !taskText.trim() || !canAdd}
+
           variant="primary"
           size="md"
           className="w-full sm:w-auto px-5 py-3"
